@@ -6,3 +6,4 @@ app = FastAPI()
 def read_root():
     return {"message": "Hello World"}
 
+#테스트
