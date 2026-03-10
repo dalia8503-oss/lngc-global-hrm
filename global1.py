@@ -13,6 +13,8 @@ st.set_page_config(page_title="LNG선공사팀 글로벌인력관리", layout="w
 # ---------------------------------------------------------
 if 'workers' not in st.session_state:
     st.session_state.workers = []
+if 'history' not in st.session_state:
+    st.session_state.history = []
 if 'korean_certs' not in st.session_state:
     st.session_state.korean_certs = []
 if 'korean_classes' not in st.session_state:
