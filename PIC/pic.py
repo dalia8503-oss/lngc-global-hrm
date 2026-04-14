@@ -119,7 +119,11 @@ def main():
         html
     )
 
-    # 6) 자동완성 datalist 주입
+    # 6) JS names 배열 주입
+    names_js = ', '.join(f'"{n}"' for n in NAMES)
+    html = html.replace('/* NAMES_LIST */', names_js)
+
+    # 7) 자동완성 datalist 주입
     options = "\n".join(f'  <option value="{n}">' for n in NAMES)
     html = re.sub(
         r'<datalist id="names">.*?</datalist>',
@@ -128,7 +132,7 @@ def main():
         flags=re.DOTALL
     )
 
-    # 7) 담당자 입력 rows (renderTKs 함수 내부 name-inputs 블록)
+    # 8) 담당자 입력 rows (renderTKs 함수 내부 name-inputs 블록 — 호환용)
     person_rows = build_person_rows(MAX_PERSONS)
     html = re.sub(
         r'(<div class="name-inputs">).*?(</div>\s*</div>\s*`;)',

@@ -128,24 +128,61 @@
     color: #2e7d32;
     font-weight: 500;
   }
-  .name-inputs { display: flex; flex-direction: column; gap: 7px; }
-  .name-row { display: flex; align-items: center; gap: 8px; }
-  .name-row input {
-    flex: 1;
-    height: 40px;
-    padding: 0 12px;
+  .value-display {
+    min-height: 38px;
+    padding: 8px 12px;
     border: 1.5px solid #eee;
     border-radius: 8px;
     background: #fafafa;
+    font-size: 15px;
     color: #1a1a1a;
+    margin-bottom: 8px;
+    word-break: break-all;
+    line-height: 1.5;
+  }
+  .value-display.empty { color: #ccc; font-size: 13px; }
+  .name-btns { display: flex; flex-wrap: wrap; gap: 5px; }
+  .name-btn {
+    height: 34px;
+    padding: 0 10px;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.1s;
+  }
+  .name-btn:active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .plus-btn {
+    height: 34px;
+    padding: 0 14px;
+    border: 1.5px solid #FFA000;
+    border-radius: 8px;
+    background: #FFF8E1;
+    color: #E65100;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .plus-btn.pending { background: #FFA000; color: #fff; }
+  .del-btn {
+    height: 34px;
+    padding: 0 10px;
+    border: 1.5px solid #ffcdd2;
+    border-radius: 8px;
+    background: #fff;
+    color: #e53935;
     font-size: 15px;
     font-family: inherit;
-    appearance: none;
-    -webkit-appearance: none;
-    transition: border-color 0.15s;
+    cursor: pointer;
+    margin-left: auto;
+    -webkit-tap-highlight-color: transparent;
   }
-  .name-row input:focus { outline: none; border-color: #1a1a1a; background: #fff; }
-  .name-row input::placeholder { color: #ccc; }
 
   .submit-btn {
     width: 100%;
@@ -333,18 +370,20 @@
 <div class="toast" id="toast"></div>
 
 <script>
+const names = ["송안", "구일", "화진", "한국", "오셔나즈", "다온", "엠알", "1부2과", "1부3과", "1부4과", "1부5과(E7)", "2부1과", "2부2과", "2부3과(E7)"];
 const jobs = ['IP', 'FSB(ABM/Manual)', 'TBP', 'MB(설치/배재/마킹)', 'MB(수동)', 'MB(자동)', 'MB(리웰딩)', 'L/QC', '족장'];
 const tks = ['4TK', '3TK', '2TK', '1TK'];
 const data = {};
+const parts = {};
 jobs.forEach(j => {
   data[j] = {};
-  tks.forEach(tk => { data[j][tk] = ['']; });
+  parts[j] = {};
+  tks.forEach(tk => { data[j][tk] = ['']; parts[j][tk] = []; });
 });
 
 let currentJob = null;
 
 function selectJob(job) {
-  if (currentJob) saveCurrentJob();
   currentJob = job;
   document.querySelectorAll('.job-tab').forEach(btn => {
     btn.classList.toggle('active', btn.textContent === job);
@@ -352,37 +391,76 @@ function selectJob(job) {
   renderTKs(job);
 }
 
-function saveCurrentJob() {
-  if (!currentJob) return;
-  tks.forEach(tk => {
-    const inputs = document.querySelectorAll(`input[data-tk="${tk}"]`);
-    if (inputs.length) {
-      data[currentJob][tk] = Array.from(inputs).map(i => i.value.trim());
-    }
-  });
-  updateTabDot(currentJob);
-}
+function saveCurrentJob() { /* data updated in real-time */ }
 
 function updateTabDot(job) {
   const hasAny = tks.some(tk => data[job][tk].some(v => v !== ''));
   document.querySelectorAll('.job-tab').forEach(btn => {
-    if (btn.textContent === job) {
-      btn.classList.toggle('filled', hasAny);
-    }
+    if (btn.textContent === job) btn.classList.toggle('filled', hasAny);
   });
+}
+
+function getDisplayValue(p, showPending) {
+  let result = '', usePlus = false;
+  for (const item of p) {
+    if (item === '+') { usePlus = true; }
+    else {
+      if (!result) result = item;
+      else if (usePlus) { result += '+' + item; usePlus = false; }
+      else result += '/' + item;
+    }
+  }
+  if (showPending && p.length > 0 && p[p.length-1] === '+') result += '+';
+  return result;
+}
+
+function updateDisplay(job, tk) {
+  const p = parts[job][tk];
+  const display = getDisplayValue(p, true);
+  const submit  = getDisplayValue(p, false);
+  data[job][tk] = [submit];
+  const el = document.getElementById('vd-' + tk);
+  if (el) { el.textContent = display || '담당자를 선택하세요'; el.classList.toggle('empty', !display); }
+  const plusEl = document.getElementById('plus-' + tk);
+  if (plusEl) plusEl.classList.toggle('pending', p.length > 0 && p[p.length-1] === '+');
+  updateTabDot(job);
+}
+
+function addName(job, tk, name) {
+  parts[job][tk].push(name);
+  updateDisplay(job, tk);
+}
+
+function addPlus(job, tk) {
+  const p = parts[job][tk];
+  if (p.length > 0 && p[p.length-1] !== '+') { p.push('+'); updateDisplay(job, tk); }
+}
+
+function deleteLast(job, tk) {
+  parts[job][tk].pop();
+  updateDisplay(job, tk);
 }
 
 function renderTKs(job) {
   const container = document.getElementById('tkContent');
   let html = '';
   tks.forEach((tk, idx) => {
-    const vals = data[job][tk];
     const badge = idx === 0 ? '<span class="tk-badge">최우선</span>' : '';
+    const p = parts[job][tk];
+    const displayVal = getDisplayValue(p, true);
+    const isPending = p.length > 0 && p[p.length-1] === '+';
+    const j = JSON.stringify(job), t = JSON.stringify(tk);
+    const nameBtnsHtml = names.map(n =>
+      `<button class="name-btn" onclick="addName(${j},${t},${JSON.stringify(n)})">${escHtml(n)}</button>`
+    ).join('');
     html += `
     <div class="tk-card">
       <div class="tk-title">${tk} ${badge}</div>
-      <div class="name-inputs">
-        <div class="name-row"><input type="text" list="names" data-tk="${tk}" data-idx="0" placeholder="담당자" value="${escHtml(vals[0])}"></div>
+      <div class="value-display${displayVal ? '' : ' empty'}" id="vd-${tk}">${escHtml(displayVal) || '담당자를 선택하세요'}</div>
+      <div class="name-btns">
+        ${nameBtnsHtml}
+        <button class="plus-btn${isPending ? ' pending' : ''}" id="plus-${tk}" onclick="addPlus(${j},${t})">+</button>
+        <button class="del-btn" onclick="deleteLast(${j},${t})">⌫</button>
       </div>
     </div>`;
   });
@@ -409,8 +487,8 @@ function handleSubmit() {
     if (!hasAny) return;
     lines.push(`\n[${job}]`);
     tks.forEach(tk => {
-      const names = data[job][tk].filter(v => v !== '');
-      lines.push(`  ${tk}: ${names.length ? names.join(' / ') : '-'}`);
+      const vals = data[job][tk].filter(v => v !== '');
+      lines.push(`  ${tk}: ${vals.length ? vals[0] : '-'}`);
     });
   });
 
@@ -448,7 +526,7 @@ function fallbackCopy(text) {
 
 function resetAll() {
   jobs.forEach(j => {
-    tks.forEach(tk => { data[j][tk] = ['']; });
+    tks.forEach(tk => { data[j][tk] = ['']; parts[j][tk] = []; });
   });
   currentJob = null;
   document.getElementById('hoseon').value = '';
