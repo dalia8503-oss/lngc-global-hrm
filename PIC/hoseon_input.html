@@ -313,6 +313,8 @@
   <button class="reset-btn" onclick="resetAll()">초기화</button>
 </div>
 
+<datalist id="names"></datalist>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -365,7 +367,7 @@ function renderTKs(job) {
     <div class="tk-card">
       <div class="tk-title">${tk} ${badge}</div>
       <div class="name-inputs">
-        <div class="name-row"><input type="text" data-tk="${tk}" data-idx="0" placeholder="담당자" value="${escHtml(vals[0])}"></div>
+        <div class="name-row"><input type="text" list="names" data-tk="${tk}" data-idx="0" placeholder="담당자" value="${escHtml(vals[0])}"></div>
       </div>
     </div>`;
   });

@@ -28,6 +28,13 @@ TKS = ['4TK', '3TK', '2TK', '1TK']
 # 담당자 입력 수
 MAX_PERSONS = 1
 
+# 담당자 자동완성 목록
+NAMES = [
+    '송안', '구일', '화진', '한국', '오셔나즈', '다온', '엠알',
+    '1부2과', '1부3과', '1부4과', '1부5과(E7)',
+    '2부1과', '2부2과', '2부3과(E7)',
+]
+
 # 출력 파일 이름
 OUTPUT_FILE = "hoseon_input_custom.html"
 
@@ -112,7 +119,16 @@ def main():
         html
     )
 
-    # 6) 담당자 입력 rows (renderTKs 함수 내부 name-inputs 블록)
+    # 6) 자동완성 datalist 주입
+    options = "\n".join(f'  <option value="{n}">' for n in NAMES)
+    html = re.sub(
+        r'<datalist id="names">.*?</datalist>',
+        f'<datalist id="names">\n{options}\n</datalist>',
+        html,
+        flags=re.DOTALL
+    )
+
+    # 7) 담당자 입력 rows (renderTKs 함수 내부 name-inputs 블록)
     person_rows = build_person_rows(MAX_PERSONS)
     html = re.sub(
         r'(<div class="name-inputs">).*?(</div>\s*</div>\s*`;)',
