@@ -492,6 +492,7 @@ async function sendToServer() {
     if (json.ok) {
       showToast('제출 완료!');
       btn.textContent = '✅ 제출 완료';
+      setTimeout(() => { btn.textContent = '📤 서버로 제출'; btn.disabled = false; }, 3000);
     } else {
       showToast('제출 실패 — 관리자에게 문의하세요');
       btn.textContent = '📤 서버로 제출';
