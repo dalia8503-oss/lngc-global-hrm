@@ -449,9 +449,9 @@ function renderTKs(job) {
     const p = parts[job][tk];
     const displayVal = getDisplayValue(p, true);
     const isPending = p.length > 0 && p[p.length-1] === '+';
-    const j = JSON.stringify(job), t = JSON.stringify(tk);
+    const j = escHtml(JSON.stringify(job)), t = escHtml(JSON.stringify(tk));
     const nameBtnsHtml = names.map(n =>
-      `<button class="name-btn" onclick="addName(${j},${t},${JSON.stringify(n)})">${escHtml(n)}</button>`
+      `<button class="name-btn" onclick="addName(${j},${t},${escHtml(JSON.stringify(n))})">${escHtml(n)}</button>`
     ).join('');
     html += `
     <div class="tk-card">
