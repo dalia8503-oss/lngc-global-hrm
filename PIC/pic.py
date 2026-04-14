@@ -28,7 +28,7 @@ TKS = ['4TK', '3TK', '2TK', '1TK']
 # 담당자 입력 수
 MAX_PERSONS = 1
 
-# 직종별 담당자 버튼 목록
+# 직종별 담당자 버튼 목록 (기본값)
 NAMES_BY_JOB = {
     'IP':              ['구일', '송안', '한국', '화진'],
     'FSB(ABM/Manual)': ['구일', '송안', '한국', '화진', '오셔나즈', '1부2과', '1부4과', '1부5과(E7)'],
@@ -37,8 +37,16 @@ NAMES_BY_JOB = {
     'MB(수동)':         ['구일', '다온', '엠알', '한국', '2부1과', '2부2과', '2부3과(E7)'],
     'MB(자동)':         ['구일', '다온', '엠알', '한국', '2부3과(E7)'],
     'MB(리웰딩)':        ['구일', '한국', '2부1과', '2부2과', '2부3과(E7)'],
-    'L/QC':            ['김남균', '신효진', '서정민', '강동국', '김택준', '원호정', '문형진', '최세훈'],
-    '족장':             ['광진', '하성'],
+    'L/QC':            [],   # 호선별로 지정 (아래 NAMES_BY_HOSEON_JOB 참고)
+    '족장':             [],   # 호선별로 지정 (아래 NAMES_BY_HOSEON_JOB 참고)
+}
+
+# 호선별 직종별 담당자 버튼 목록 (여기 지정된 호선+직종은 기본값 대신 이 목록 사용)
+NAMES_BY_HOSEON_JOB = {
+    '2665': {
+        'L/QC': ['김남균', '신효진', '서정민', '강동국', '김택준', '원호정', '문형진', '최세훈'],
+        '족장': ['광진', '하성'],
+    },
 }
 
 # 출력 파일 이름
@@ -128,8 +136,12 @@ def main():
     # 6) JS namesByJob 객체 주입
     html = html.replace('/* NAMES_BY_JOB */', json.dumps(NAMES_BY_JOB, ensure_ascii=False))
 
-    # 7) 자동완성 datalist 주입 (전체 직종 이름 합집합)
-    all_names = sorted({n for names in NAMES_BY_JOB.values() for n in names})
+    # 6b) JS namesByHoseonJob 객체 주입
+    html = html.replace('/* NAMES_BY_HOSEON_JOB */', json.dumps(NAMES_BY_HOSEON_JOB, ensure_ascii=False))
+
+    # 7) 자동완성 datalist 주입 (전체 이름 합집합)
+    all_names_hoseon = {n for h in NAMES_BY_HOSEON_JOB.values() for names in h.values() for n in names}
+    all_names = sorted({n for names in NAMES_BY_JOB.values() for n in names} | all_names_hoseon)
     options = "\n".join(f'  <option value="{n}">' for n in all_names)
     html = re.sub(
         r'<datalist id="names">.*?</datalist>',

@@ -334,7 +334,7 @@
 
 <div class="wrap">
   <p class="section-label">호선</p>
-  <input class="hoseon-input" type="text" id="hoseon" maxlength="4" placeholder="4자리 숫자 입력" inputmode="numeric">
+  <input class="hoseon-input" type="text" id="hoseon" maxlength="4" placeholder="4자리 숫자 입력" inputmode="numeric" oninput="onHoseonChange()">
 
   <p class="section-label">작성자</p>
   <input class="author-input" type="text" id="author" placeholder="이름(조직)  예: 김세연(기획운영그룹)">
@@ -399,7 +399,8 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const namesByJob = {"IP": ["구일", "송안", "한국", "화진"], "FSB(ABM/Manual)": ["구일", "송안", "한국", "화진", "오셔나즈", "1부2과", "1부4과", "1부5과(E7)"], "TBP": ["구일", "송안", "한국", "화진", "오셔나즈", "1부5과(E7)"], "MB(설치/배재/마킹)": ["구일", "다온", "엠알", "한국", "2부1과", "2부2과", "2부3과(E7)"], "MB(수동)": ["구일", "다온", "엠알", "한국", "2부1과", "2부2과", "2부3과(E7)"], "MB(자동)": ["구일", "다온", "엠알", "한국", "2부3과(E7)"], "MB(리웰딩)": ["구일", "한국", "2부1과", "2부2과", "2부3과(E7)"], "L/QC": ["김남균", "신효진", "서정민", "강동국", "김택준", "원호정", "문형진", "최세훈"], "족장": ["광진", "하성"]};
+const namesByJob = {"IP": ["구일", "송안", "한국", "화진"], "FSB(ABM/Manual)": ["구일", "송안", "한국", "화진", "오셔나즈", "1부2과", "1부4과", "1부5과(E7)"], "TBP": ["구일", "송안", "한국", "화진", "오셔나즈", "1부5과(E7)"], "MB(설치/배재/마킹)": ["구일", "다온", "엠알", "한국", "2부1과", "2부2과", "2부3과(E7)"], "MB(수동)": ["구일", "다온", "엠알", "한국", "2부1과", "2부2과", "2부3과(E7)"], "MB(자동)": ["구일", "다온", "엠알", "한국", "2부3과(E7)"], "MB(리웰딩)": ["구일", "한국", "2부1과", "2부2과", "2부3과(E7)"], "L/QC": [], "족장": []};
+const namesByHoseonJob = {"2665": {"L/QC": ["김남균", "신효진", "서정민", "강동국", "김택준", "원호정", "문형진", "최세훈"], "족장": ["광진", "하성"]}};
 const jobs = ['IP', 'FSB(ABM/Manual)', 'TBP', 'MB(설치/배재/마킹)', 'MB(수동)', 'MB(자동)', 'MB(리웰딩)', 'L/QC', '족장'];
 const tks = ['4TK', '3TK', '2TK', '1TK'];
 const data = {};
@@ -470,24 +471,39 @@ function deleteLast(job, tk) {
   updateDisplay(job, tk);
 }
 
+function getJobNames(job) {
+  const hoseon = document.getElementById('hoseon').value.trim();
+  if (namesByHoseonJob[hoseon] && namesByHoseonJob[hoseon][job]) {
+    return namesByHoseonJob[hoseon][job];
+  }
+  return namesByJob[job] || [];
+}
+
+function onHoseonChange() {
+  if (currentJob) renderTKs(currentJob);
+}
+
 function renderTKs(job) {
   const container = document.getElementById('tkContent');
   let html = '';
+  const jobNames = getJobNames(job);
   tks.forEach((tk, idx) => {
     const badge = idx === 0 ? '<span class="tk-badge">최우선</span>' : '';
     const p = parts[job][tk];
     const displayVal = getDisplayValue(p, true);
     const isPending = p.length > 0 && p[p.length-1] === '+';
     const j = escHtml(JSON.stringify(job)), t = escHtml(JSON.stringify(tk));
-    const nameBtnsHtml = (namesByJob[job] || []).map(n =>
+    const nameBtnsHtml = jobNames.map(n =>
       `<button class="name-btn" onclick="addName(${j},${t},${escHtml(JSON.stringify(n))})">${escHtml(n)}</button>`
     ).join('');
+    const noNames = jobNames.length === 0
+      ? `<span style="font-size:12px;color:#bbb">호선을 먼저 입력하세요</span>` : '';
     html += `
     <div class="tk-card">
       <div class="tk-title">${tk} ${badge}</div>
       <div class="value-display${displayVal ? '' : ' empty'}" id="vd-${tk}">${escHtml(displayVal) || '담당자를 선택하세요'}</div>
       <div class="name-btns">
-        ${nameBtnsHtml}
+        ${nameBtnsHtml}${noNames}
         ${job === 'FSB(ABM/Manual)' ? `<button class="plus-btn${isPending ? ' pending' : ''}" id="plus-${tk}" onclick="addPlus(${j},${t})">+</button>` : ''}
         <button class="del-btn" onclick="deleteLast(${j},${t})">⌫</button>
       </div>
