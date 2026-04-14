@@ -2,7 +2,7 @@ from flask import (
     Flask, request, jsonify, send_from_directory,
     redirect, url_for, session, Response
 )
-import sqlite3, os, csv, io
+import os, csv, io, psycopg2, psycopg2.extras
 from datetime import datetime
 from functools import wraps
 
@@ -10,22 +10,28 @@ app = Flask(__name__, static_folder='.')
 app.secret_key = os.environ.get('SECRET_KEY', 'change-this-in-production')
 
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin1234')
-DB_PATH = os.path.join(os.path.dirname(__file__), 'submissions.db')
+DATABASE_URL    = os.environ.get('DATABASE_URL')
+
+
+# ── DB 연결 ────────────────────────────────────────────────
+def get_conn():
+    return psycopg2.connect(DATABASE_URL)
 
 
 # ── DB 초기화 ──────────────────────────────────────────────
 def init_db():
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS submissions (
-                id           INTEGER PRIMARY KEY AUTOINCREMENT,
-                submitted_at TEXT,
-                hoseon       TEXT,
-                job          TEXT,
-                tk           TEXT,
-                name         TEXT
-            )
-        ''')
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS submissions (
+                    id           SERIAL PRIMARY KEY,
+                    submitted_at TEXT,
+                    hoseon       TEXT,
+                    job          TEXT,
+                    tk           TEXT,
+                    name         TEXT
+                )
+            ''')
 
 init_db()
 
@@ -64,11 +70,13 @@ def submit():
     if not rows:
         return jsonify({'ok': False, 'error': '입력 데이터 없음'}), 400
 
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.executemany(
-            'INSERT INTO submissions (submitted_at, hoseon, job, tk, name) VALUES (?,?,?,?,?)',
-            rows
-        )
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            psycopg2.extras.execute_values(
+                cur,
+                'INSERT INTO submissions (submitted_at, hoseon, job, tk, name) VALUES %s',
+                rows
+            )
 
     return jsonify({'ok': True})
 
@@ -113,10 +121,12 @@ def admin_login():
 @app.route('/admin')
 @admin_required
 def admin():
-    with sqlite3.connect(DB_PATH) as conn:
-        rows = conn.execute(
-            'SELECT submitted_at, hoseon, job, tk, name FROM submissions ORDER BY submitted_at DESC, hoseon'
-        ).fetchall()
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                'SELECT submitted_at, hoseon, job, tk, name FROM submissions ORDER BY submitted_at DESC, hoseon'
+            )
+            rows = cur.fetchall()
 
     trs = ''.join(
         f'<tr><td>{r[0]}</td><td>{r[1]}</td><td>{r[2]}</td><td>{r[3]}</td><td>{r[4]}</td></tr>'
@@ -175,10 +185,12 @@ def admin():
 @app.route('/admin/download')
 @admin_required
 def admin_download():
-    with sqlite3.connect(DB_PATH) as conn:
-        rows = conn.execute(
-            'SELECT submitted_at, hoseon, job, tk, name FROM submissions ORDER BY submitted_at, hoseon'
-        ).fetchall()
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                'SELECT submitted_at, hoseon, job, tk, name FROM submissions ORDER BY submitted_at, hoseon'
+            )
+            rows = cur.fetchall()
 
     buf = io.StringIO()
     w   = csv.writer(buf)
@@ -186,7 +198,7 @@ def admin_download():
     w.writerows(rows)
 
     today = datetime.now().strftime('%Y%m%d')
-    data  = ('\uFEFF' + buf.getvalue()).encode('utf-8')  # BOM for Excel
+    data  = ('\uFEFF' + buf.getvalue()).encode('utf-8')
 
     return Response(
         data,
@@ -199,8 +211,9 @@ def admin_download():
 @app.route('/admin/clear', methods=['POST'])
 @admin_required
 def admin_clear():
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute('DELETE FROM submissions')
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute('DELETE FROM submissions')
     return redirect(url_for('admin'))
 
 
