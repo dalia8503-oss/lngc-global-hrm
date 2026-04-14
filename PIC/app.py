@@ -3,6 +3,7 @@ from flask import (
     redirect, url_for, session, Response
 )
 import os, csv, io, psycopg2, psycopg2.extras
+from urllib.parse import quote
 from datetime import datetime
 from functools import wraps
 
@@ -210,7 +211,7 @@ def admin_download():
     return Response(
         data,
         mimetype='text/csv',
-        headers={'Content-Disposition': f'attachment; filename=담당정보_{today}.csv'}
+        headers={'Content-Disposition': f"attachment; filename*=UTF-8''{quote('담당정보_' + today + '.csv')}"}
     )
 
 
