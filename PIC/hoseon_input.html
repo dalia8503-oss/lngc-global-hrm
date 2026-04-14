@@ -58,8 +58,9 @@
   .hoseon-input::placeholder { font-size: 14px; font-weight: 400; letter-spacing: normal; color: #bbb; }
   .hoseon-input:focus { outline: none; border-color: #1a1a1a; }
 
+  .author-row { display: flex; gap: 8px; align-items: center; }
   .author-input {
-    width: 100%;
+    flex: 1;
     height: 50px;
     padding: 0 16px;
     border: 1.5px solid #ddd;
@@ -70,10 +71,32 @@
     font-family: inherit;
     appearance: none;
     -webkit-appearance: none;
-    transition: border-color 0.15s;
+    transition: border-color 0.15s, background 0.15s;
   }
   .author-input::placeholder { color: #bbb; }
   .author-input:focus { outline: none; border-color: #1a1a1a; }
+  .author-input:read-only {
+    background: #f5f4f0;
+    border-color: #e0e0e0;
+    color: #555;
+    cursor: default;
+  }
+  .author-edit-btn {
+    flex-shrink: 0;
+    height: 50px;
+    padding: 0 14px;
+    border: 1.5px solid #ddd;
+    border-radius: 12px;
+    background: #fff;
+    color: #888;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.12s;
+  }
+  .author-edit-btn:active { background: #f0f0f0; }
 
   .job-tabs {
     display: grid;
@@ -337,7 +360,12 @@
   <input class="hoseon-input" type="text" id="hoseon" maxlength="4" placeholder="4자리 숫자 입력" inputmode="numeric" oninput="onHoseonChange()">
 
   <p class="section-label">작성자</p>
-  <input class="author-input" type="text" id="author" placeholder="이름(조직)  예: 김세연(기획운영그룹)">
+  <div class="author-row">
+    <input class="author-input" type="text" id="author" placeholder="이름(조직)  예: 김세연(기획운영그룹)"
+           onkeydown="if(event.key==='Enter'){lockAuthor();this.blur()}"
+           onblur="if(this.value.trim())lockAuthor()">
+    <button class="author-edit-btn" id="authorEditBtn" style="display:none" onclick="unlockAuthor()">수정</button>
+  </div>
 
   <p class="section-label">직종 선택</p>
   <div class="job-tabs" id="jobTabs">
@@ -488,6 +516,35 @@ function renderTKs(job) {
   container.innerHTML = html;
 }
 
+// ── 작성자 잠금/수정 ──────────────────────────────────────
+const AUTHOR_KEY = 'pic_author';
+
+function lockAuthor() {
+  const input = document.getElementById('author');
+  const val = input.value.trim();
+  if (!val) return;
+  input.value = val;
+  input.readOnly = true;
+  localStorage.setItem(AUTHOR_KEY, val);
+  document.getElementById('authorEditBtn').style.display = '';
+}
+
+function unlockAuthor() {
+  const input = document.getElementById('author');
+  input.readOnly = false;
+  input.focus();
+  document.getElementById('authorEditBtn').style.display = 'none';
+}
+
+(function initAuthor() {
+  const saved = localStorage.getItem(AUTHOR_KEY);
+  if (saved) {
+    const input = document.getElementById('author');
+    input.value = saved;
+    lockAuthor();
+  }
+})();
+
 function escHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -556,7 +613,6 @@ function resetAll() {
   });
   currentJob = null;
   document.getElementById('hoseon').value = '';
-  document.getElementById('author').value = '';
   document.getElementById('tkContent').innerHTML = '<div class="placeholder-msg">위에서 직종을 선택하세요</div>';
   document.getElementById('resultArea').style.display = 'none';
   document.querySelectorAll('.job-tab').forEach(btn => btn.classList.remove('active','filled'));
