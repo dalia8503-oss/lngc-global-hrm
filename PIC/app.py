@@ -72,6 +72,7 @@ def submit():
 
     with get_conn() as conn:
         with conn.cursor() as cur:
+            cur.execute('DELETE FROM submissions WHERE hoseon = %s', (hoseon,))
             psycopg2.extras.execute_values(
                 cur,
                 'INSERT INTO submissions (submitted_at, hoseon, job, tk, name) VALUES %s',
