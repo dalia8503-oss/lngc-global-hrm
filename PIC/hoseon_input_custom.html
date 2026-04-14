@@ -196,6 +196,7 @@
     transition: all 0.1s;
   }
   .name-btn:active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .name-btn.selected { background: #1a1a1a; color: #f5f4f0; border-color: #1a1a1a; }
   .plus-btn {
     height: 34px;
     padding: 0 14px;
@@ -429,6 +430,7 @@
 <script>
 const namesByJob = {"IP": ["구일", "송안", "한국", "화진"], "FSB(ABM/Manual)": ["구일", "송안", "한국", "화진", "오셔나즈", "1부2과", "1부4과", "1부5과(E7)"], "TBP": ["구일", "송안", "한국", "화진", "오셔나즈", "1부5과(E7)"], "MB(설치/배재/마킹)": ["구일", "다온", "엠알", "한국", "2부1과", "2부2과", "2부3과(E7)"], "MB(수동)": ["구일", "다온", "엠알", "한국", "2부1과", "2부2과", "2부3과(E7)"], "MB(자동)": ["구일", "다온", "엠알", "한국", "2부3과(E7)"], "MB(리웰딩)": ["구일", "한국", "2부1과", "2부2과", "2부3과(E7)"], "L/QC": [], "족장": []};
 const namesByHoseonJob = {"2665": {"L/QC": ["김남균", "신효진", "서정민", "강동국", "김택준", "원호정", "문형진", "최세훈"], "족장": ["광진", "하성"]}};
+const singleEntryJobs = ["L/QC", "족장"];
 const jobs = ['IP', 'FSB(ABM/Manual)', 'TBP', 'MB(설치/배재/마킹)', 'MB(수동)', 'MB(자동)', 'MB(리웰딩)', 'L/QC', '족장'];
 const tks = ['4TK', '3TK', '2TK', '1TK'];
 const data = {};
@@ -511,10 +513,52 @@ function onHoseonChange() {
   if (currentJob) renderTKs(currentJob);
 }
 
+// ── 단일 선택 직종 (L/QC, 족장 등): 1회 선택 → 전체 TK 동일 적용 ──
+function addNameSingle(job, name) {
+  tks.forEach(tk => { parts[job][tk] = [name]; data[job][tk] = [name]; });
+  updateTabDot(job);
+  renderTKs(job);
+}
+
+function delNameSingle(job) {
+  tks.forEach(tk => { parts[job][tk] = []; data[job][tk] = ['']; });
+  updateTabDot(job);
+  renderTKs(job);
+}
+
 function renderTKs(job) {
   const container = document.getElementById('tkContent');
+  const jobNames  = getJobNames(job);
+
+  // ── 단일 선택 모드 ──────────────────────────────────────
+  if (singleEntryJobs.includes(job)) {
+    const currentVal = data[job][tks[0]][0] || '';
+    const j = escHtml(JSON.stringify(job));
+    const noNames = jobNames.length === 0
+      ? `<span style="font-size:12px;color:#bbb">호선을 먼저 입력하세요</span>` : '';
+    const btnHtml = jobNames.map(n => {
+      const sel = currentVal === n ? ' selected' : '';
+      return `<button class="name-btn${sel}" onclick="addNameSingle(${j},${escHtml(JSON.stringify(n))})">${escHtml(n)}</button>`;
+    }).join('');
+    const tkPreview = currentVal
+      ? `<div style="margin-top:10px;padding:8px 12px;background:#f5f4f0;border-radius:8px;font-size:12px;color:#666;line-height:1.8">
+           ${tks.map(tk => `<span><b>${tk}</b>: ${escHtml(currentVal)}</span>`).join(' &nbsp;·&nbsp; ')}
+         </div>` : '';
+    container.innerHTML = `
+      <div class="tk-card">
+        <div class="tk-title">담당자 선택 <span style="font-size:12px;color:#888;font-weight:400">— 전체 TK 동일 적용</span></div>
+        <div class="value-display${currentVal ? '' : ' empty'}" id="vd-single">${escHtml(currentVal) || '담당자를 선택하세요'}</div>
+        <div class="name-btns">
+          ${btnHtml}${noNames}
+          <button class="del-btn" onclick="delNameSingle(${j})">⌫</button>
+        </div>
+        ${tkPreview}
+      </div>`;
+    return;
+  }
+
+  // ── 일반 모드 (TK별 개별 입력) ─────────────────────────
   let html = '';
-  const jobNames = getJobNames(job);
   tks.forEach((tk, idx) => {
     const badge = idx === 0 ? '<span class="tk-badge">최우선</span>' : '';
     const p = parts[job][tk];

@@ -49,6 +49,9 @@ NAMES_BY_HOSEON_JOB = {
     },
 }
 
+# 1회 선택으로 전체 TK에 동일 적용되는 직종
+SINGLE_ENTRY_JOBS = ['L/QC', '족장']
+
 # 출력 파일 이름
 OUTPUT_FILE = "hoseon_input_custom.html"
 
@@ -135,6 +138,9 @@ def main():
 
     # 6) JS namesByJob 객체 주입
     html = html.replace('/* NAMES_BY_JOB */', json.dumps(NAMES_BY_JOB, ensure_ascii=False))
+
+    # 6c) JS singleEntryJobs 배열 주입
+    html = html.replace('/* SINGLE_ENTRY_JOBS */', json.dumps(SINGLE_ENTRY_JOBS, ensure_ascii=False))
 
     # 6b) JS namesByHoseonJob 객체 주입
     html = html.replace('/* NAMES_BY_HOSEON_JOB */', json.dumps(NAMES_BY_HOSEON_JOB, ensure_ascii=False))
