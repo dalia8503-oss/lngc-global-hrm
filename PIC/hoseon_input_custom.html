@@ -58,6 +58,23 @@
   .hoseon-input::placeholder { font-size: 14px; font-weight: 400; letter-spacing: normal; color: #bbb; }
   .hoseon-input:focus { outline: none; border-color: #1a1a1a; }
 
+  .author-input {
+    width: 100%;
+    height: 50px;
+    padding: 0 16px;
+    border: 1.5px solid #ddd;
+    border-radius: 12px;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 16px;
+    font-family: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color 0.15s;
+  }
+  .author-input::placeholder { color: #bbb; }
+  .author-input:focus { outline: none; border-color: #1a1a1a; }
+
   .job-tabs {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -319,6 +336,9 @@
   <p class="section-label">호선</p>
   <input class="hoseon-input" type="text" id="hoseon" maxlength="4" placeholder="4자리 숫자 입력" inputmode="numeric">
 
+  <p class="section-label">작성자</p>
+  <input class="author-input" type="text" id="author" placeholder="이름(조직)  예: 김세연(기획운영그룹)">
+
   <p class="section-label">직종 선택</p>
   <div class="job-tabs" id="jobTabs">
     <button class="job-tab" onclick="selectJob('IP')">IP</button>
@@ -483,9 +503,13 @@ function escHtml(str) {
 function handleSubmit() {
   saveCurrentJob();
   const hoseon = document.getElementById('hoseon').value.trim();
+  const author = document.getElementById('author').value.trim();
 
   if (!hoseon || hoseon.length !== 4 || !/^\d{4}$/.test(hoseon)) {
     showToast('호선을 4자리 숫자로 입력해주세요'); return;
+  }
+  if (!author) {
+    showToast('작성자를 입력해주세요'); return;
   }
 
   let lines = [];
@@ -503,6 +527,7 @@ function handleSubmit() {
 
   if (lines.length <= 1) { showToast('담당자를 한 명 이상 입력해주세요'); return; }
 
+  lines.push(`\n[작성자] ${author}`);
   const result = lines.join('\n');
   document.getElementById('resultText').textContent = result;
   const ra = document.getElementById('resultArea');
@@ -539,6 +564,7 @@ function resetAll() {
   });
   currentJob = null;
   document.getElementById('hoseon').value = '';
+  document.getElementById('author').value = '';
   document.getElementById('tkContent').innerHTML = '<div class="placeholder-msg">위에서 직종을 선택하세요</div>';
   document.getElementById('resultArea').style.display = 'none';
   document.querySelectorAll('.job-tab').forEach(btn => btn.classList.remove('active','filled'));
@@ -547,12 +573,13 @@ function resetAll() {
 
 function buildCSVBlob() {
   const hoseon = document.getElementById('hoseon').value.trim();
-  const rows = [['호선', '직종', 'TK', '담당자']];
+  const author = document.getElementById('author').value.trim();
+  const rows = [['호선', '직종', 'TK', '담당자', '작성자']];
   jobs.forEach(job => {
     tks.forEach(tk => {
       const names = data[job][tk];
       if (names.some(v => v !== '')) {
-        rows.push([hoseon, job, tk, names[0]||'']);
+        rows.push([hoseon, job, tk, names[0]||'', author]);
       }
     });
   });
@@ -567,8 +594,12 @@ async function sendToServer() {
   }
   saveCurrentJob();
   const hoseon = document.getElementById('hoseon').value.trim();
+  const author = document.getElementById('author').value.trim();
   if (!hoseon || hoseon.length !== 4 || !/^\d{4}$/.test(hoseon)) {
     showToast('호선을 4자리 숫자로 입력해주세요'); return;
+  }
+  if (!author) {
+    showToast('작성자를 입력해주세요'); return;
   }
 
   const jobs_data = {};
@@ -588,7 +619,7 @@ async function sendToServer() {
     const res  = await fetch('/submit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ hoseon, jobs: jobs_data })
+      body: JSON.stringify({ hoseon, author, jobs: jobs_data })
     });
     const json = await res.json();
     if (json.ok) {

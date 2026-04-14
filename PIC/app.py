@@ -30,12 +30,16 @@ def init_db():
                     hoseon       TEXT,
                     job          TEXT,
                     tk           TEXT,
-                    name         TEXT
+                    name         TEXT,
+                    author       TEXT DEFAULT ''
                 )
             ''')
             cur.execute('''
                 CREATE UNIQUE INDEX IF NOT EXISTS idx_hoseon_job_tk
                 ON submissions(hoseon, job, tk)
+            ''')
+            cur.execute('''
+                ALTER TABLE submissions ADD COLUMN IF NOT EXISTS author TEXT DEFAULT ''
             ''')
 
 init_db()
@@ -62,11 +66,12 @@ def index():
 def submit():
     body   = request.get_json(force=True)
     hoseon = body.get('hoseon', '').strip()
+    author = body.get('author', '').strip()
     jobs   = body.get('jobs', {})
     now    = datetime.now().strftime('%Y-%m-%d %H:%M')
 
     rows = [
-        (now, hoseon, job, tk, name)
+        (now, hoseon, job, tk, name, author)
         for job, tks in jobs.items()
         for tk, name in tks.items()
         if name
@@ -79,10 +84,11 @@ def submit():
         with conn.cursor() as cur:
             psycopg2.extras.execute_values(
                 cur,
-                '''INSERT INTO submissions (submitted_at, hoseon, job, tk, name) VALUES %s
+                '''INSERT INTO submissions (submitted_at, hoseon, job, tk, name, author) VALUES %s
                    ON CONFLICT (hoseon, job, tk)
                    DO UPDATE SET submitted_at = EXCLUDED.submitted_at,
-                                 name         = EXCLUDED.name''',
+                                 name         = EXCLUDED.name,
+                                 author       = EXCLUDED.author''',
                 rows
             )
 
@@ -132,14 +138,14 @@ def admin():
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                'SELECT submitted_at, hoseon, job, tk, name FROM submissions ORDER BY submitted_at DESC, hoseon'
+                'SELECT submitted_at, hoseon, job, tk, name, author FROM submissions ORDER BY submitted_at DESC, hoseon'
             )
             rows = cur.fetchall()
 
     trs = ''.join(
-        f'<tr><td>{r[0]}</td><td>{r[1]}</td><td>{r[2]}</td><td>{r[3]}</td><td>{r[4]}</td></tr>'
+        f'<tr><td>{r[0]}</td><td>{r[1]}</td><td>{r[2]}</td><td>{r[3]}</td><td>{r[4]}</td><td>{r[5]}</td></tr>'
         for r in rows
-    ) or '<tr><td colspan="5" class="empty">제출된 데이터가 없습니다</td></tr>'
+    ) or '<tr><td colspan="6" class="empty">제출된 데이터가 없습니다</td></tr>'
 
     return f'''<!DOCTYPE html><html lang="ko">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -182,7 +188,7 @@ def admin():
 <p class="count">총 {len(rows)}건</p>
 <div class="wrap">
   <table>
-    <thead><tr><th>제출시각</th><th>호선</th><th>직종</th><th>TK</th><th>담당자</th></tr></thead>
+    <thead><tr><th>제출시각</th><th>호선</th><th>직종</th><th>TK</th><th>담당자</th><th>작성자</th></tr></thead>
     <tbody>{trs}</tbody>
   </table>
 </div>
@@ -196,13 +202,13 @@ def admin_download():
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                'SELECT submitted_at, hoseon, job, tk, name FROM submissions ORDER BY submitted_at, hoseon'
+                'SELECT submitted_at, hoseon, job, tk, name, author FROM submissions ORDER BY submitted_at, hoseon'
             )
             rows = cur.fetchall()
 
     buf = io.StringIO()
     w   = csv.writer(buf)
-    w.writerow(['제출시각', '호선', '직종', 'TK', '담당자'])
+    w.writerow(['제출시각', '호선', '직종', 'TK', '담당자', '작성자'])
     w.writerows(rows)
 
     today = datetime.now().strftime('%Y%m%d')
