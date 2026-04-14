@@ -56,7 +56,7 @@ def build_person_rows(max_persons):
     for i in range(max_persons):
         rows.append(
             f'        <div class="name-row">'
-            f'<input type="text" data-tk="${{tk}}" data-idx="{i}" placeholder="담당자" value="${{escHtml(vals[{i}])}}"></div>'
+            f'<input type="text" list="names" data-tk="${{tk}}" data-idx="{i}" placeholder="담당자" value="${{escHtml(vals[{i}])}}"></div>'
         )
     return "\n".join(rows)
 
