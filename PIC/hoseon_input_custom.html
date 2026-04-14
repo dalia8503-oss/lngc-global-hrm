@@ -468,7 +468,7 @@ function renderTKs(job) {
       <div class="value-display${displayVal ? '' : ' empty'}" id="vd-${tk}">${escHtml(displayVal) || '담당자를 선택하세요'}</div>
       <div class="name-btns">
         ${nameBtnsHtml}
-        <button class="plus-btn${isPending ? ' pending' : ''}" id="plus-${tk}" onclick="addPlus(${j},${t})">+</button>
+        ${job === 'FSB(ABM/Manual)' ? `<button class="plus-btn${isPending ? ' pending' : ''}" id="plus-${tk}" onclick="addPlus(${j},${t})">+</button>` : ''}
         <button class="del-btn" onclick="deleteLast(${j},${t})">⌫</button>
       </div>
     </div>`;
