@@ -43,7 +43,7 @@ def admin_required(f):
 # ── 폼 서빙 ────────────────────────────────────────────────
 @app.route('/')
 def index():
-    return send_from_directory('.', 'hoseon_input.html')
+    return send_from_directory('.', 'hoseon_input_custom.html')
 
 
 # ── 폼 제출 → DB 저장 ─────────────────────────────────────
