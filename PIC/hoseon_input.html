@@ -355,7 +355,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const names = [/* NAMES_LIST */];
+const namesByJob = /* NAMES_BY_JOB */;
 const jobs = ['A직종','B직종','C직종','D직종','E직종','F직종','G직종','H직종','I직종'];
 const tks = ['4TK','3TK','2TK','1TK'];
 const data = {};
@@ -435,7 +435,7 @@ function renderTKs(job) {
     const displayVal = getDisplayValue(p, true);
     const isPending = p.length > 0 && p[p.length-1] === '+';
     const j = escHtml(JSON.stringify(job)), t = escHtml(JSON.stringify(tk));
-    const nameBtnsHtml = names.map(n =>
+    const nameBtnsHtml = (namesByJob[job] || []).map(n =>
       `<button class="name-btn" onclick="addName(${j},${t},${escHtml(JSON.stringify(n))})">${escHtml(n)}</button>`
     ).join('');
     html += `

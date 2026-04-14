@@ -351,26 +351,35 @@
 </div>
 
 <datalist id="names">
-  <option value="송안">
-  <option value="구일">
-  <option value="화진">
-  <option value="한국">
-  <option value="오셔나즈">
-  <option value="다온">
-  <option value="엠알">
   <option value="1부2과">
-  <option value="1부3과">
   <option value="1부4과">
   <option value="1부5과(E7)">
   <option value="2부1과">
   <option value="2부2과">
   <option value="2부3과(E7)">
+  <option value="강동국">
+  <option value="광진">
+  <option value="구일">
+  <option value="김남균">
+  <option value="김택준">
+  <option value="다온">
+  <option value="문형진">
+  <option value="서정민">
+  <option value="송안">
+  <option value="신효진">
+  <option value="엠알">
+  <option value="오셔나즈">
+  <option value="원호정">
+  <option value="최세훈">
+  <option value="하성">
+  <option value="한국">
+  <option value="화진">
 </datalist>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const names = ["송안", "구일", "화진", "한국", "오셔나즈", "다온", "엠알", "1부2과", "1부3과", "1부4과", "1부5과(E7)", "2부1과", "2부2과", "2부3과(E7)"];
+const namesByJob = {"IP": ["구일", "송안", "한국", "화진"], "FSB(ABM/Manual)": ["구일", "송안", "한국", "화진", "오셔나즈", "1부2과", "1부4과", "1부5과(E7)"], "TBP": ["구일", "송안", "한국", "화진", "오셔나즈", "1부5과(E7)"], "MB(설치/배재/마킹)": ["구일", "다온", "엠알", "한국", "2부1과", "2부2과", "2부3과(E7)"], "MB(수동)": ["구일", "다온", "엠알", "한국", "2부1과", "2부2과", "2부3과(E7)"], "MB(자동)": ["구일", "다온", "엠알", "한국", "2부3과(E7)"], "MB(리웰딩)": ["구일", "한국", "2부1과", "2부2과", "2부3과(E7)"], "L/QC": ["김남균", "신효진", "서정민", "강동국", "김택준", "원호정", "문형진", "최세훈"], "족장": ["광진", "하성"]};
 const jobs = ['IP', 'FSB(ABM/Manual)', 'TBP', 'MB(설치/배재/마킹)', 'MB(수동)', 'MB(자동)', 'MB(리웰딩)', 'L/QC', '족장'];
 const tks = ['4TK', '3TK', '2TK', '1TK'];
 const data = {};
@@ -450,7 +459,7 @@ function renderTKs(job) {
     const displayVal = getDisplayValue(p, true);
     const isPending = p.length > 0 && p[p.length-1] === '+';
     const j = escHtml(JSON.stringify(job)), t = escHtml(JSON.stringify(tk));
-    const nameBtnsHtml = names.map(n =>
+    const nameBtnsHtml = (namesByJob[job] || []).map(n =>
       `<button class="name-btn" onclick="addName(${j},${t},${escHtml(JSON.stringify(n))})">${escHtml(n)}</button>`
     ).join('');
     html += `

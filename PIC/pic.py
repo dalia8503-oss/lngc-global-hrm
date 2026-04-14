@@ -28,12 +28,18 @@ TKS = ['4TK', '3TK', '2TK', '1TK']
 # 담당자 입력 수
 MAX_PERSONS = 1
 
-# 담당자 자동완성 목록
-NAMES = [
-    '송안', '구일', '화진', '한국', '오셔나즈', '다온', '엠알',
-    '1부2과', '1부3과', '1부4과', '1부5과(E7)',
-    '2부1과', '2부2과', '2부3과(E7)',
-]
+# 직종별 담당자 버튼 목록
+NAMES_BY_JOB = {
+    'IP':              ['구일', '송안', '한국', '화진'],
+    'FSB(ABM/Manual)': ['구일', '송안', '한국', '화진', '오셔나즈', '1부2과', '1부4과', '1부5과(E7)'],
+    'TBP':             ['구일', '송안', '한국', '화진', '오셔나즈', '1부5과(E7)'],
+    'MB(설치/배재/마킹)':  ['구일', '다온', '엠알', '한국', '2부1과', '2부2과', '2부3과(E7)'],
+    'MB(수동)':         ['구일', '다온', '엠알', '한국', '2부1과', '2부2과', '2부3과(E7)'],
+    'MB(자동)':         ['구일', '다온', '엠알', '한국', '2부3과(E7)'],
+    'MB(리웰딩)':        ['구일', '한국', '2부1과', '2부2과', '2부3과(E7)'],
+    'L/QC':            ['김남균', '신효진', '서정민', '강동국', '김택준', '원호정', '문형진', '최세훈'],
+    '족장':             ['광진', '하성'],
+}
 
 # 출력 파일 이름
 OUTPUT_FILE = "hoseon_input_custom.html"
@@ -41,7 +47,7 @@ OUTPUT_FILE = "hoseon_input_custom.html"
 # --------------------------------------------
 
 
-import re, os
+import re, os, json
 
 INPUT_FILE = "hoseon_input.html"
 
@@ -119,12 +125,12 @@ def main():
         html
     )
 
-    # 6) JS names 배열 주입
-    names_js = ', '.join(f'"{n}"' for n in NAMES)
-    html = html.replace('/* NAMES_LIST */', names_js)
+    # 6) JS namesByJob 객체 주입
+    html = html.replace('/* NAMES_BY_JOB */', json.dumps(NAMES_BY_JOB, ensure_ascii=False))
 
-    # 7) 자동완성 datalist 주입
-    options = "\n".join(f'  <option value="{n}">' for n in NAMES)
+    # 7) 자동완성 datalist 주입 (전체 직종 이름 합집합)
+    all_names = sorted({n for names in NAMES_BY_JOB.values() for n in names})
+    options = "\n".join(f'  <option value="{n}">' for n in all_names)
     html = re.sub(
         r'<datalist id="names">.*?</datalist>',
         f'<datalist id="names">\n{options}\n</datalist>',
@@ -148,6 +154,7 @@ def main():
     print(f"   직종: {JOBS}")
     print(f"   TK  : {TKS}")
     print(f"   담당자 최대 {MAX_PERSONS}명")
+    print(f"   직종별 버튼: { {j: len(v) for j, v in NAMES_BY_JOB.items()} }")
 
 if __name__ == "__main__":
     main()
