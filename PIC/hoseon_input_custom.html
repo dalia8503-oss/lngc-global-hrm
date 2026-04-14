@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>호선별 담당정보 입력</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f4f0;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding-bottom: 2rem;
+  }
+
+  .header {
+    background: #1a1a1a;
+    color: #f5f4f0;
+    text-align: center;
+    padding: 1.25rem 1rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+  .header p { font-size: 12px; color: #888; margin-top: 3px; }
+
+  .wrap { max-width: 480px; margin: 0 auto; padding: 1rem; }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #888;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 1.25rem 0 8px;
+  }
+
+  .hoseon-input {
+    width: 100%;
+    height: 56px;
+    padding: 0 16px;
+    border: 1.5px solid #ddd;
+    border-radius: 12px;
+    background: #fff;
+    color: #1a1a1a;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-align: center;
+    font-family: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color 0.15s;
+  }
+  .hoseon-input::placeholder { font-size: 14px; font-weight: 400; letter-spacing: normal; color: #bbb; }
+  .hoseon-input:focus { outline: none; border-color: #1a1a1a; }
+
+  .job-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+  .job-tab {
+    height: 44px;
+    border: 1.5px solid #ddd;
+    border-radius: 10px;
+    background: #fff;
+    color: #888;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.12s;
+    position: relative;
+  }
+  .job-tab.active {
+    background: #1a1a1a;
+    color: #f5f4f0;
+    border-color: #1a1a1a;
+  }
+  .job-tab.filled::after {
+    content: '';
+    position: absolute;
+    top: 6px; right: 6px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #4CAF50;
+  }
+  .job-tab.active.filled::after { background: #81C784; }
+
+  .tk-wrap { margin-top: 0; }
+
+  .placeholder-msg {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: #bbb;
+    font-size: 14px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1.5px dashed #e0e0e0;
+    margin-top: 0;
+  }
+
+  .tk-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1.5px solid #e8e8e8;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .tk-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tk-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: #e8f5e9;
+    color: #2e7d32;
+    font-weight: 500;
+  }
+  .name-inputs { display: flex; flex-direction: column; gap: 7px; }
+  .name-row { display: flex; align-items: center; gap: 8px; }
+  .name-row input {
+    flex: 1;
+    height: 40px;
+    padding: 0 12px;
+    border: 1.5px solid #eee;
+    border-radius: 8px;
+    background: #fafafa;
+    color: #1a1a1a;
+    font-size: 15px;
+    font-family: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color 0.15s;
+  }
+  .name-row input:focus { outline: none; border-color: #1a1a1a; background: #fff; }
+  .name-row input::placeholder { color: #ccc; }
+
+  .submit-btn {
+    width: 100%;
+    height: 52px;
+    background: #1a1a1a;
+    color: #f5f4f0;
+    border: none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    letter-spacing: -0.01em;
+    transition: opacity 0.15s;
+  }
+  .submit-btn:active { opacity: 0.75; }
+
+  .result-area {
+    display: none;
+    margin-top: 1rem;
+    background: #fff;
+    border-radius: 12px;
+    border: 1.5px solid #e8e8e8;
+    overflow: hidden;
+  }
+  .result-header {
+    background: #f5f4f0;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #888;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-bottom: 1px solid #eee;
+  }
+  .result-text {
+    padding: 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #1a1a1a;
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.8;
+  }
+  .copy-btn {
+    width: 100%;
+    height: 46px;
+    background: transparent;
+    border: none;
+    border-top: 1px solid #eee;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.1s;
+  }
+  .copy-btn:active { background: #f5f4f0; }
+
+  .csv-btn {
+    width: 100%;
+    height: 46px;
+    background: transparent;
+    border: none;
+    border-top: 1px solid #eee;
+    font-size: 14px;
+    font-weight: 600;
+    color: #2e7d32;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.1s;
+  }
+  .csv-btn:active { background: #f1f8e9; }
+
+  .send-btn {
+    width: 100%;
+    height: 46px;
+    background: transparent;
+    border: none;
+    border-top: 1px solid #eee;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1565C0;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.1s;
+  }
+  .send-btn:active { background: #e3f2fd; }
+  .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .reset-btn {
+    width: 100%;
+    height: 44px;
+    background: transparent;
+    border: 1.5px solid #ddd;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #888;
+    cursor: pointer;
+    font-family: inherit;
+    margin-top: 10px;
+    transition: all 0.12s;
+  }
+  .reset-btn:active { background: #eee; }
+
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #1a1a1a;
+    color: #f5f4f0;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 11px 22px;
+    border-radius: 99px;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+    z-index: 100;
+    font-family: inherit;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>호선별 담당정보 입력</h1>
+  <p>직종 선택 후 TK별 담당자를 입력하세요</p>
+</div>
+
+<div class="wrap">
+  <p class="section-label">호선</p>
+  <input class="hoseon-input" type="text" id="hoseon" maxlength="4" placeholder="4자리 숫자 입력" inputmode="numeric">
+
+  <p class="section-label">직종 선택</p>
+  <div class="job-tabs" id="jobTabs">
+    <button class="job-tab" onclick="selectJob('IP')">IP</button>
+    <button class="job-tab" onclick="selectJob('FSB(ABM/Manual)')">FSB(ABM/Manual)</button>
+    <button class="job-tab" onclick="selectJob('TBP')">TBP</button>
+    <button class="job-tab" onclick="selectJob('MB(설치/배재/마킹)')">MB(설치/배재/마킹)</button>
+    <button class="job-tab" onclick="selectJob('MB(수동)')">MB(수동)</button>
+    <button class="job-tab" onclick="selectJob('MB(자동)')">MB(자동)</button>
+    <button class="job-tab" onclick="selectJob('MB(리웰딩)')">MB(리웰딩)</button>
+    <button class="job-tab" onclick="selectJob('L/QC')">L/QC</button>
+    <button class="job-tab" onclick="selectJob('족장')">족장</button>
+  </div>
+
+  <div class="section-label" style="margin-top:1.25rem">TK별 담당자</div>
+  <div class="tk-wrap" id="tkContent">
+    <div class="placeholder-msg">위에서 직종을 선택하세요</div>
+  </div>
+
+  <button class="submit-btn" onclick="handleSubmit()">취합 내용 생성</button>
+
+  <div class="result-area" id="resultArea">
+    <div class="result-header">생성된 취합 내용</div>
+    <div class="result-text" id="resultText"></div>
+    <button class="copy-btn" onclick="copyText()">클립보드에 복사</button>
+    <button class="csv-btn" onclick="shareCSV()">📎 CSV 파일로 보내기</button>
+    <button class="send-btn" id="sendBtn" onclick="sendToServer()">📤 서버로 제출</button>
+  </div>
+
+  <button class="reset-btn" onclick="resetAll()">초기화</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const jobs = ['IP', 'FSB(ABM/Manual)', 'TBP', 'MB(설치/배재/마킹)', 'MB(수동)', 'MB(자동)', 'MB(리웰딩)', 'L/QC', '족장'];
+const tks = ['4TK', '3TK', '2TK', '1TK'];
+const data = {};
+jobs.forEach(j => {
+  data[j] = {};
+  tks.forEach(tk => { data[j][tk] = ['']; });
+});
+
+let currentJob = null;
+
+function selectJob(job) {
+  if (currentJob) saveCurrentJob();
+  currentJob = job;
+  document.querySelectorAll('.job-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent === job);
+  });
+  renderTKs(job);
+}
+
+function saveCurrentJob() {
+  if (!currentJob) return;
+  tks.forEach(tk => {
+    const inputs = document.querySelectorAll(`input[data-tk="${tk}"]`);
+    if (inputs.length) {
+      data[currentJob][tk] = Array.from(inputs).map(i => i.value.trim());
+    }
+  });
+  updateTabDot(currentJob);
+}
+
+function updateTabDot(job) {
+  const hasAny = tks.some(tk => data[job][tk].some(v => v !== ''));
+  document.querySelectorAll('.job-tab').forEach(btn => {
+    if (btn.textContent === job) {
+      btn.classList.toggle('filled', hasAny);
+    }
+  });
+}
+
+function renderTKs(job) {
+  const container = document.getElementById('tkContent');
+  let html = '';
+  tks.forEach((tk, idx) => {
+    const vals = data[job][tk];
+    const badge = idx === 0 ? '<span class="tk-badge">최우선</span>' : '';
+    html += `
+    <div class="tk-card">
+      <div class="tk-title">${tk} ${badge}</div>
+      <div class="name-inputs">
+        <div class="name-row"><input type="text" data-tk="${tk}" data-idx="0" placeholder="담당자" value="${escHtml(vals[0])}"></div>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function handleSubmit() {
+  saveCurrentJob();
+  const hoseon = document.getElementById('hoseon').value.trim();
+
+  if (!hoseon || hoseon.length !== 4 || !/^\d{4}$/.test(hoseon)) {
+    showToast('호선을 4자리 숫자로 입력해주세요'); return;
+  }
+
+  let lines = [];
+  lines.push(`[호선] ${hoseon}`);
+
+  jobs.forEach(job => {
+    const hasAny = tks.some(tk => data[job][tk].some(v => v !== ''));
+    if (!hasAny) return;
+    lines.push(`\n[${job}]`);
+    tks.forEach(tk => {
+      const names = data[job][tk].filter(v => v !== '');
+      lines.push(`  ${tk}: ${names.length ? names.join(' / ') : '-'}`);
+    });
+  });
+
+  if (lines.length <= 1) { showToast('담당자를 한 명 이상 입력해주세요'); return; }
+
+  const result = lines.join('\n');
+  document.getElementById('resultText').textContent = result;
+  const ra = document.getElementById('resultArea');
+  ra.style.display = 'block';
+  setTimeout(() => ra.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  showToast('취합 내용이 생성됐어요');
+}
+
+function copyText() {
+  const text = document.getElementById('resultText').textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showToast('복사됐어요!')).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  showToast('복사됐어요!');
+}
+
+function resetAll() {
+  jobs.forEach(j => {
+    tks.forEach(tk => { data[j][tk] = ['']; });
+  });
+  currentJob = null;
+  document.getElementById('hoseon').value = '';
+  document.getElementById('tkContent').innerHTML = '<div class="placeholder-msg">위에서 직종을 선택하세요</div>';
+  document.getElementById('resultArea').style.display = 'none';
+  document.querySelectorAll('.job-tab').forEach(btn => btn.classList.remove('active','filled'));
+  showToast('초기화됐어요');
+}
+
+function buildCSVBlob() {
+  const hoseon = document.getElementById('hoseon').value.trim();
+  const rows = [['호선', '직종', 'TK', '담당자']];
+  jobs.forEach(job => {
+    tks.forEach(tk => {
+      const names = data[job][tk];
+      if (names.some(v => v !== '')) {
+        rows.push([hoseon, job, tk, names[0]||'']);
+      }
+    });
+  });
+  if (rows.length <= 1) return null;
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\r\n');
+  return new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+}
+
+async function sendToServer() {
+  if (location.protocol === 'file:') {
+    showToast('서버 배포 후 사용 가능합니다'); return;
+  }
+  saveCurrentJob();
+  const hoseon = document.getElementById('hoseon').value.trim();
+  if (!hoseon || hoseon.length !== 4 || !/^\d{4}$/.test(hoseon)) {
+    showToast('호선을 4자리 숫자로 입력해주세요'); return;
+  }
+
+  const jobs_data = {};
+  jobs.forEach(job => {
+    jobs_data[job] = {};
+    tks.forEach(tk => { jobs_data[job][tk] = data[job][tk][0] || ''; });
+  });
+  if (!jobs.some(job => tks.some(tk => jobs_data[job][tk]))) {
+    showToast('담당자를 한 명 이상 입력해주세요'); return;
+  }
+
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  btn.textContent = '제출 중…';
+
+  try {
+    const res  = await fetch('/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hoseon, jobs: jobs_data })
+    });
+    const json = await res.json();
+    if (json.ok) {
+      showToast('제출 완료!');
+      btn.textContent = '✅ 제출 완료';
+    } else {
+      showToast('제출 실패 — 관리자에게 문의하세요');
+      btn.textContent = '📤 서버로 제출';
+      btn.disabled = false;
+    }
+  } catch {
+    showToast('네트워크 오류가 발생했어요');
+    btn.textContent = '📤 서버로 제출';
+    btn.disabled = false;
+  }
+}
+
+async function shareCSV() {
+  saveCurrentJob();
+  const hoseon = document.getElementById('hoseon').value.trim();
+  if (!hoseon || hoseon.length !== 4 || !/^\d{4}$/.test(hoseon)) {
+    showToast('호선을 4자리 숫자로 입력해주세요'); return;
+  }
+  const blob = buildCSVBlob();
+  if (!blob) { showToast('담당자를 한 명 이상 입력해주세요'); return; }
+
+  const today = new Date().toLocaleDateString('ko-KR', {year:'2-digit',month:'2-digit',day:'2-digit'})
+                          .replace(/\. /g,'').replace('.','');
+  const fileName = `담당정보_${hoseon}_${today}.csv`;
+  const file = new File([blob], fileName, { type: 'text/csv' });
+
+  // 모바일 Web Share API (카카오톡 직접 공유 가능)
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: `담당정보_${hoseon}` });
+      return;
+    } catch(e) {
+      if (e.name === 'AbortError') return; // 사용자가 취소
+    }
+  }
+  // 폴백: 파일 다운로드
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fileName;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('CSV 파일이 저장됐어요');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+</script>
+</body>
+</html>

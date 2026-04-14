@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: lng-quiz-web
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+
+  - type: web
+    name: pic-hoseon
+    env: python
+    plan: free
+    rootDir: PIC
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SECRET_KEY
+        sync: false
